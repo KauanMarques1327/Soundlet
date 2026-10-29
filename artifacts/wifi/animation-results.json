@@ -1,0 +1,26 @@
+[
+  {
+    "screen": "03-wifi-search",
+    "central_arc_changed_pixels": 3680,
+    "small_arc_changed_pixels": 179,
+    "stationary_symbol_changed_pixels": 0
+  },
+  {
+    "screen": "08-wifi-resumed",
+    "central_arc_changed_pixels": 2314,
+    "small_arc_changed_pixels": 139,
+    "stationary_symbol_changed_pixels": 0
+  },
+  {
+    "screen": "08-wifi-window-resumed",
+    "central_arc_changed_pixels": 1090,
+    "small_arc_changed_pixels": 73,
+    "stationary_symbol_changed_pixels": 0
+  },
+  {
+    "screen": "11-bluetooth-search",
+    "central_arc_changed_pixels": 5288,
+    "small_arc_changed_pixels": 171,
+    "stationary_symbol_changed_pixels": 0
+  }
+]

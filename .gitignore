@@ -1,0 +1,78 @@
+# .NET / MAUI generated output (also applies to the standalone checks project)
+**/bin/
+**/obj/
+*.binlog
+
+# Local IDE state; keep shared settings.json and other project configuration visible
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+.idea/workspace.xml
+.idea/shelf/
+.vscode/*.local.json
+# This existing launch profile contains an absolute local workspace path.
+/.vscode/launch.json
+
+# Build, emulator and acceptance-test logs; preserve scripts, docs and fixtures
+/*.log
+/artifacts/**/*.log
+/artifacts/cleanup-audit*.json
+/artifacts/cleanup-validation/
+**/__pycache__/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+**/TestResults/
+*.pyc
+*.pyo
+.gradle/
+.cxx/
+/.cache/
+*.tmp
+*.temp
+*.swp
+*~
+
+# Generated Android packages and signing output
+*.apk
+*.aab
+*.apks
+*.apk.idsig
+
+# Private/local configuration and signing keys (never application source assets)
+.env
+.env.*
+!.env.example
+!.env.sample
+!.env.template
+local.properties
+*.local.props
+*.local.targets
+appsettings.*.local.json
+*.keystore
+*.jks
+*.pfx
+*.p12
+*.key
+id_rsa
+id_ed25519
+
+# Existing local backups and a captured device history: retained for manual review
+/Backups/
+/artifacts/connected/persisted-device-history.json
+
+# Known local screenshots at workspace root; Resources/ remains visible
+/emulator-boot.png
+/soundlet-current.png
+/soundlet-final.png
+/soundlet-last.png
+/soundlet-restarted.png
+/soundlet-running.png
+/vscode-debug.png
+
+# OS-generated metadata
+.DS_Store
+Thumbs.db
+Desktop.ini

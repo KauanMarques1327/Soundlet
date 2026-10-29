@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="Soundlet.ConnectedPage" Shell.NavBarIsVisible="False"
+             BackgroundColor="#000B16">
+    <ContentPage.Resources>
+        <Style x:Key="OutlineButton" TargetType="Button">
+            <Setter Property="BackgroundColor" Value="#031626" />
+            <Setter Property="TextColor" Value="#00D8F4" />
+            <Setter Property="BorderColor" Value="#145A83" />
+            <Setter Property="BorderWidth" Value="1" />
+            <Setter Property="CornerRadius" Value="18" />
+            <Setter Property="Padding" Value="8,0" />
+            <Setter Property="MinimumHeightRequest" Value="44" />
+            <Setter Property="MinimumWidthRequest" Value="44" />
+        </Style>
+    </ContentPage.Resources>
+    <Grid x:Name="Root" SizeChanged="OnRootSizeChanged" SafeAreaEdges="Container">
+        <Image Source="connected_background.png" Aspect="AspectFill" InputTransparent="True" />
+        <Grid x:Name="PageLayout" Padding="22,14,22,10" RowDefinitions="Auto,Auto,Auto,*,Auto" RowSpacing="8">
+            <Grid ColumnDefinitions="*,*" HeightRequest="44">
+                <Grid HorizontalOptions="Start" WidthRequest="44" HeightRequest="44">
+                    <Button Text="" Padding="0" WidthRequest="44" HeightRequest="44"
+                            Style="{StaticResource OutlineButton}" Clicked="OnBackClicked" SemanticProperties.Description="Voltar para procurar pulseira" />
+                    <!-- Geometric chevron avoids font baseline and Android font padding. -->
+                    <Polyline Points="26.5,13 17.5,22 26.5,31" Stroke="#FFF347" StrokeThickness="3"
+                              StrokeLineCap="Round" InputTransparent="True" />
+                </Grid>
+                <Button Grid.Column="1" Text="•••" HorizontalOptions="End" Style="{StaticResource OutlineButton}"
+                        Clicked="OnMoreClicked" SemanticProperties.Description="Informações da pulseira" />
+            </Grid>
+            <VerticalStackLayout Grid.Row="1" Spacing="5" Margin="0,-16,0,8" InputTransparent="True">
+                <Image x:Name="Bracelet" Source="connected_bracelet.png" HeightRequest="142" WidthRequest="142" />
+                <Label x:Name="Heading" FontSize="25" FontFamily="OpenSansSemibold" HorizontalTextAlignment="Center">
+                    <Label.FormattedText><FormattedString><Span Text="Pulseira " TextColor="White" /><Span Text="conectada" TextColor="#00E0ED" /></FormattedString></Label.FormattedText>
+                </Label>
+                <Label Text="ESP32-S3" FontSize="17" TextColor="#BCC2D3" HorizontalTextAlignment="Center" />
+                <Border Stroke="#145A83" BackgroundColor="#031320" StrokeShape="RoundRectangle 22" Padding="12,7" HorizontalOptions="Center" Margin="0,3,0,0">
+                    <HorizontalStackLayout Spacing="9">
+                        <Label x:Name="ConnectionSymbol" Text="ᛒ" TextColor="#00D8F4" FontSize="19" VerticalOptions="Center" />
+                        <Label x:Name="ConnectionLabel" Text="Conectado via Bluetooth" TextColor="#BCC2D3" FontSize="12" VerticalOptions="Center" />
+                        <BoxView Color="#00EDAE" WidthRequest="8" HeightRequest="8" CornerRadius="4" VerticalOptions="Center" />
+                    </HorizontalStackLayout>
+                </Border>
+            </VerticalStackLayout>
+            <Grid Grid.Row="2" ColumnDefinitions="*,Auto" ColumnSpacing="6" MinimumHeightRequest="44">
+                <Label Text="Histórico de alertas" TextColor="White" FontFamily="OpenSansSemibold" FontSize="19" VerticalOptions="Center" />
+                <Button x:Name="DateButton" Grid.Column="1" Text="▦  Hoje  ﹀" FontSize="12" TextColor="#D8E3F4"
+                        Style="{StaticResource OutlineButton}" Clicked="OnDateClicked" SemanticProperties.Description="Escolher data do histórico" />
+            </Grid>
+            <Grid Grid.Row="3">
+                <ScrollView x:Name="HistoryScroll">
+                    <VerticalStackLayout x:Name="Cards" Spacing="0" />
+                </ScrollView>
+                <VerticalStackLayout x:Name="EmptyState" VerticalOptions="Center" Spacing="12" Padding="16" InputTransparent="True">
+                    <Image Source="alert_bell.png" WidthRequest="32" HeightRequest="32" Opacity="0.65" />
+                    <Label Text="Nenhum alerta registrado nesta data" FontSize="15" TextColor="#CDD6E5" HorizontalTextAlignment="Center" />
+                    <Label Text="Toque em + para simular um alerta da pulseira." FontSize="12" TextColor="#8299B7" HorizontalTextAlignment="Center" />
+                </VerticalStackLayout>
+            </Grid>
+            <Button Grid.Row="4" x:Name="AddButton" Text="+" FontSize="30" WidthRequest="54" HeightRequest="54" CornerRadius="27"
+                    HorizontalOptions="End" Style="{StaticResource OutlineButton}" Clicked="OnAddClicked" SemanticProperties.Description="Simular próximo alerta">
+                <Button.Shadow><Shadow Brush="#00D9F5" Opacity="0.3" Radius="12" Offset="0,0" /></Button.Shadow>
+            </Button>
+        </Grid>
+        <Grid x:Name="CalendarOverlay" IsVisible="False" ZIndex="20" SizeChanged="OnCalendarSizeChanged">
+            <BoxView Color="#18000B16" BackgroundColor="Transparent"><BoxView.GestureRecognizers><TapGestureRecognizer Tapped="OnOutsideTapped" /></BoxView.GestureRecognizers></BoxView>
+            <Border x:Name="CalendarPanel" Margin="22,0" Padding="12" VerticalOptions="Start" BackgroundColor="#021724"
+                    Stroke="#00C5F1" StrokeThickness="1" StrokeShape="RoundRectangle 24">
+                <Border.Shadow><Shadow Brush="#00B6FF" Radius="14" Opacity="0.22" Offset="0,2" /></Border.Shadow>
+                <Grid RowDefinitions="44,32,*" RowSpacing="5">
+                    <Grid ColumnDefinitions="44,*,44" ColumnSpacing="6">
+                        <Button Text="‹" FontSize="30" Style="{StaticResource OutlineButton}" Clicked="OnPreviousMonth" SemanticProperties.Description="Mês anterior" />
+                        <Label x:Name="MonthLabel" Grid.Column="1" FontSize="17" TextColor="White" HorizontalTextAlignment="Center" VerticalOptions="Center" />
+                        <Button Grid.Column="2" Text="›" FontSize="30" Style="{StaticResource OutlineButton}" Clicked="OnNextMonth" SemanticProperties.Description="Próximo mês" />
+                    </Grid>
+                    <Grid x:Name="Weekdays" Grid.Row="1" ColumnDefinitions="*,*,*,*,*,*,*" />
+                    <ScrollView x:Name="CalendarDaysScroll" Grid.Row="2" HeightRequest="264">
+                        <Grid x:Name="Days" ColumnDefinitions="*,*,*,*,*,*,*" RowDefinitions="44,44,44,44,44,44" />
+                    </ScrollView>
+                </Grid>
+            </Border>
+        </Grid>
+    </Grid>
+</ContentPage>

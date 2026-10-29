@@ -1,0 +1,142 @@
+[
+  {
+    "check": "Bluetooth selected on startup",
+    "passed": true
+  },
+  {
+    "check": "First Wi-Fi tap only selects",
+    "passed": true
+  },
+  {
+    "check": "Second normal Wi-Fi tap navigates",
+    "passed": true
+  },
+  {
+    "check": "Wi-Fi card clickable: icon",
+    "passed": true
+  },
+  {
+    "check": "Wi-Fi simulator persists a new alert",
+    "passed": true
+  },
+  {
+    "check": "Alert uses actual device date and time",
+    "passed": true
+  },
+  {
+    "check": "Simulation adds timestamped alert via Wi-Fi",
+    "passed": true
+  },
+  {
+    "check": "Calendar opens via Wi-Fi",
+    "passed": true
+  },
+  {
+    "check": "Calendar changes history date",
+    "passed": true
+  },
+  {
+    "check": "Calendar restores today and its alerts",
+    "passed": true
+  },
+  {
+    "check": "Back closes calendar and stays connected",
+    "passed": true
+  },
+  {
+    "check": "Connected returns to Wi-Fi: icon",
+    "passed": true
+  },
+  {
+    "check": "Wi-Fi card clickable: name",
+    "passed": true
+  },
+  {
+    "check": "Connected returns to Wi-Fi: name",
+    "passed": true
+  },
+  {
+    "check": "Wi-Fi card clickable: subtitle",
+    "passed": true
+  },
+  {
+    "check": "Connected returns to Wi-Fi: subtitle",
+    "passed": true
+  },
+  {
+    "check": "Wi-Fi card clickable: empty",
+    "passed": true
+  },
+  {
+    "check": "Connected returns to Wi-Fi: empty",
+    "passed": true
+  },
+  {
+    "check": "Wi-Fi card clickable: arrow",
+    "passed": true
+  },
+  {
+    "check": "Connected returns to Wi-Fi: arrow",
+    "passed": true
+  },
+  {
+    "check": "Wi-Fi card clickable: left-edge",
+    "passed": true
+  },
+  {
+    "check": "Connected returns to Wi-Fi: left-edge",
+    "passed": true
+  },
+  {
+    "check": "Wi-Fi card clickable: right-edge",
+    "passed": true
+  },
+  {
+    "check": "Connected returns to Wi-Fi: right-edge",
+    "passed": true
+  },
+  {
+    "check": "Wi-Fi search survives background and resume",
+    "passed": true
+  },
+  {
+    "check": "Wi-Fi selection preserved after back",
+    "passed": true
+  },
+  {
+    "check": "First Bluetooth tap only selects",
+    "passed": true
+  },
+  {
+    "check": "Second Bluetooth tap navigates",
+    "passed": true
+  },
+  {
+    "check": "Existing connected page via Bluetooth",
+    "passed": true
+  },
+  {
+    "check": "Wi-Fi history shared with Bluetooth",
+    "passed": true
+  },
+  {
+    "check": "Bluetooth simulator persists a new alert",
+    "passed": true
+  },
+  {
+    "check": "Simulation works via Bluetooth",
+    "passed": true
+  },
+  {
+    "check": "Calendar works via Bluetooth",
+    "passed": true
+  },
+  {
+    "check": "Android back returns to Bluetooth search",
+    "passed": true
+  },
+  {
+    "check": "Bluetooth selection preserved after back",
+    "passed": true
+  }
+]

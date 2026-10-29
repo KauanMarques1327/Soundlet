@@ -1,0 +1,28 @@
+{
+  "viewport": [
+    0,
+    128,
+    1080,
+    2337
+  ],
+  "scale": 1.2705882352941176,
+  "bluetooth_center": [
+    540.0,
+    766.1941176470589
+  ],
+  "heading_and_small_arc_center_y": 1262.3588235294117,
+  "frame_comparisons": [
+    {
+      "pair": "ab",
+      "changed_glyph_pixels": 0,
+      "changed_central_arc_pixels": 3498,
+      "changed_small_arc_pixels": 199
+    },
+    {
+      "pair": "ac",
+      "changed_glyph_pixels": 0,
+      "changed_central_arc_pixels": 4709,
+      "changed_small_arc_pixels": 264
+    }
+  ]
+}

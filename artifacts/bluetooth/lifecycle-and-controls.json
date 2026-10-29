@@ -1,0 +1,12 @@
+{
+  "changed_glyph_pixels": 0,
+  "changed_central_arc_pixels": 2111,
+  "changed_small_arc_pixels": 37,
+  "card_selection_dialog_verified": true,
+  "back_navigation_verified": true,
+  "same_process_after_background_resume": 12977,
+  "original_resolution_restored": [
+    1080,
+    2400
+  ]
+}

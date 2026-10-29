@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="735" height="1600" viewBox="0 0 735 1600">
+<defs><radialGradient id="bg" cx="0" cy="0.25" r="1"><stop stop-color="#002643"/><stop offset=".53" stop-color="#000e1b"/><stop offset="1" stop-color="#00070f"/></radialGradient>
+<linearGradient id="blue" x2="1" y2="1"><stop stop-color="#064e99"/><stop offset="1" stop-color="#00162c"/></linearGradient></defs>
+<path fill="url(#bg)" d="M0 0H735V1600H0Z"/>
+<path fill="url(#blue)" stroke="#1465ac" stroke-width="2" d="M0 205C85 85 269 164 294 0H0Z"/>
+<path fill="url(#blue)" stroke="#157ac5" stroke-width="2" d="M439 1600C498 1481 653 1546 735 1430V1600Z"/>
+<g fill="none" stroke="#fff43b"><path opacity=".025" stroke-width="35" d="M335 0C313 211 101 145 37 319L0 411 M346 1600C415 1406 618 1496 735 1352"/>
+<path opacity=".06" stroke-width="18" d="M335 0C313 211 101 145 37 319L0 411 M346 1600C415 1406 618 1496 735 1352"/>
+<path opacity=".16" stroke-width="7" d="M335 0C313 211 101 145 37 319L0 411 M346 1600C415 1406 618 1496 735 1352"/>
+<path stroke-width="2.5" d="M335 0C313 211 101 145 37 319L0 411 M346 1600C415 1406 618 1496 735 1352"/></g></svg>

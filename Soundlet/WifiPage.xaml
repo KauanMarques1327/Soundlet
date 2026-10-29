@@ -1,0 +1,67 @@
+
+
+<ContentPage
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    x:Class="Soundlet.WifiPage"
+    BackgroundColor="#0B132B"
+    Shell.NavBarIsVisible="False">
+
+    
+
+    <AbsoluteLayout>
+
+        <!-- Imagem e arcos compartilham o mesmo viewport, já dentro da área segura. -->
+        <Grid
+            SafeAreaEdges="None"
+            AbsoluteLayout.LayoutBounds="0,0,1,1"
+            AbsoluteLayout.LayoutFlags="All">
+
+            <Image
+                Source="soundlet_wifi.png"
+                InputTransparent="True"
+                Aspect="AspectFill" />
+
+            <AbsoluteLayout
+                x:Name="ArtworkLayout"
+                SafeAreaEdges="None"
+                IsClippedToBounds="True"
+                SizeChanged="OnArtworkSizeChanged">
+
+                <GraphicsView
+                    x:Name="CentralLoading"
+                    InputTransparent="True" />
+
+                <GraphicsView
+                    x:Name="SearchLoading"
+                    InputTransparent="True" />
+
+                <!-- Área de toque do botão amarelo da imagem. -->
+                <Button
+                    x:Name="BackButton"
+                    Text=""
+                    BackgroundColor="Transparent"
+                    BorderWidth="0"
+                    Padding="0"
+                    ZIndex="10"
+                    SemanticProperties.Description="Voltar para a tela inicial"
+                    Clicked="OnBackClicked" />
+
+                <Button
+                    x:Name="DeviceCardButton"
+                    Text=""
+                    BackgroundColor="Transparent"
+                    BorderWidth="0"
+                    Padding="0"
+                    CornerRadius="24"
+                    MinimumWidthRequest="0"
+                    MinimumHeightRequest="0"
+                    ZIndex="10"
+                    SemanticProperties.Description="Soundlet Pulseira, ESP32-S3. Abrir pulseira conectada, conexão simulada"
+                    Clicked="OnPulseiraClicked" />
+
+            </AbsoluteLayout>
+        </Grid>
+
+    </AbsoluteLayout>
+</ContentPage>

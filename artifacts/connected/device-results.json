@@ -1,0 +1,19 @@
+[
+  "Six taps create the requested sequence",
+  "All records have unique IDs",
+  "Visible history is newest first",
+  "Calendar opens at device current month",
+  "Next month",
+  "Previous month",
+  "Date selection filters history and shows empty state",
+  "Selecting today restores records",
+  "Tap outside dismisses calendar",
+  "Second tap toggles calendar closed",
+  "Android Back closes calendar and retains page",
+  "Seventh tap wraps to fire without replacing records",
+  "Occurrence timestamp matches actual device tap time",
+  "Displayed time uses Brazilian HH:mm",
+  "History remains scrollable",
+  "Connected back returns to Bluetooth",
+  "Existing Bluetooth back returns to Main"
+]
