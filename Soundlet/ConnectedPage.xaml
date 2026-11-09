@@ -32,14 +32,14 @@
             <VerticalStackLayout Grid.Row="1" Spacing="5" Margin="0,-16,0,8" InputTransparent="True">
                 <Image x:Name="Bracelet" Source="connected_bracelet.png" HeightRequest="142" WidthRequest="142" />
                 <Label x:Name="Heading" FontSize="25" FontFamily="OpenSansSemibold" HorizontalTextAlignment="Center">
-                    <Label.FormattedText><FormattedString><Span Text="Pulseira " TextColor="White" /><Span Text="conectada" TextColor="#00E0ED" /></FormattedString></Label.FormattedText>
+                    <Label.FormattedText><FormattedString><Span Text="Pulseira " TextColor="White" /><Span x:Name="ConnectionHeadingState" Text="conectada" TextColor="#00E0ED" /></FormattedString></Label.FormattedText>
                 </Label>
                 <Label Text="ESP32-S3" FontSize="17" TextColor="#BCC2D3" HorizontalTextAlignment="Center" />
                 <Border Stroke="#145A83" BackgroundColor="#031320" StrokeShape="RoundRectangle 22" Padding="12,7" HorizontalOptions="Center" Margin="0,3,0,0">
                     <HorizontalStackLayout Spacing="9">
                         <Label x:Name="ConnectionSymbol" Text="ᛒ" TextColor="#00D8F4" FontSize="19" VerticalOptions="Center" />
                         <Label x:Name="ConnectionLabel" Text="Conectado via Bluetooth" TextColor="#BCC2D3" FontSize="12" VerticalOptions="Center" />
-                        <BoxView Color="#00EDAE" WidthRequest="8" HeightRequest="8" CornerRadius="4" VerticalOptions="Center" />
+                        <BoxView x:Name="ConnectionDot" Color="#00EDAE" WidthRequest="8" HeightRequest="8" CornerRadius="4" VerticalOptions="Center" />
                     </HorizontalStackLayout>
                 </Border>
             </VerticalStackLayout>
@@ -54,12 +54,12 @@
                 </ScrollView>
                 <VerticalStackLayout x:Name="EmptyState" VerticalOptions="Center" Spacing="12" Padding="16" InputTransparent="True">
                     <Image Source="alert_bell.png" WidthRequest="32" HeightRequest="32" Opacity="0.65" />
-                    <Label Text="Nenhum alerta registrado nesta data" FontSize="15" TextColor="#CDD6E5" HorizontalTextAlignment="Center" />
-                    <Label Text="Toque em + para simular um alerta da pulseira." FontSize="12" TextColor="#8299B7" HorizontalTextAlignment="Center" />
+                    <Label x:Name="EmptyMessage" Text="Nenhum alerta recebido até o momento." FontSize="15" TextColor="#CDD6E5" HorizontalTextAlignment="Center" />
                 </VerticalStackLayout>
             </Grid>
-            <Button Grid.Row="4" x:Name="AddButton" Text="+" FontSize="30" WidthRequest="54" HeightRequest="54" CornerRadius="27"
-                    HorizontalOptions="End" Style="{StaticResource OutlineButton}" Clicked="OnAddClicked" SemanticProperties.Description="Simular próximo alerta">
+            <Button Grid.Row="4" x:Name="ClearButton" Text="Limpar histórico" ImageSource="history_trash.png" ContentLayout="Left,8"
+                    FontSize="13" HeightRequest="54" Padding="14,0" IsEnabled="False" Opacity="0.45"
+                    HorizontalOptions="End" Style="{StaticResource OutlineButton}" Clicked="OnClearClicked" SemanticProperties.Description="Limpar todas as notificações do histórico">
                 <Button.Shadow><Shadow Brush="#00D9F5" Opacity="0.3" Radius="12" Offset="0,0" /></Button.Shadow>
             </Button>
         </Grid>

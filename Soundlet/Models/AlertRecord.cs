@@ -1,11 +1,15 @@
 namespace Soundlet.Models;
 
-public enum AlertType { Fire, Door, Siren, Doorbell, Baby, Dog }
+public enum AlertType { Fire, Door, Siren, Doorbell, Baby, Dog, Clap }
+
+public enum AlertSource { Manual, Bracelet }
 
 public sealed record AlertDefinition(string Title, string Description, string Color, string Icon);
 
 public sealed record AlertRecord(Guid Id, AlertType Type, DateTime OccurredAt)
 {
+    public AlertSource Source { get; init; } = AlertSource.Manual;
+
     [System.Text.Json.Serialization.JsonIgnore]
     public string Title => Definition(Type).Title;
     [System.Text.Json.Serialization.JsonIgnore]
@@ -17,6 +21,7 @@ public sealed record AlertRecord(Guid Id, AlertType Type, DateTime OccurredAt)
 
     public static AlertDefinition Definition(AlertType type) => type switch
     {
+        AlertType.Clap => new("Palma detectada", "A pulseira identificou o som de uma palma.", "#B34DFF", "alert_clap.png"),
         AlertType.Fire => new("Alerta de incêndio", "Som de alarme de incêndio detectado", "#FF5269", "alert_fire.png"),
         AlertType.Door => new("Batidas na porta", "Possível batida na porta", "#19B9FF", "alert_door.png"),
         AlertType.Siren => new("Alerta de sirene", "Som de sirene detectado", "#FF617B", "alert_siren.png"),

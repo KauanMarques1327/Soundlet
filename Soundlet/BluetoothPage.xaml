@@ -47,8 +47,19 @@
                     SemanticProperties.Description="Voltar para a tela inicial"
                     Clicked="OnBackClicked" />
 
+                <Border x:Name="DeviceCardMask" BackgroundColor="#00101F" Stroke="#145A83"
+                        StrokeShape="RoundRectangle 24" Padding="8" ZIndex="11">
+                    <VerticalStackLayout VerticalOptions="Center" Spacing="5">
+                        <Label x:Name="SearchStatus" Text="Procurando pulseira..." TextColor="#BCC2D3"
+                               FontSize="13" HorizontalTextAlignment="Center" />
+                        <Button x:Name="RetryButton" Text="Buscar novamente" IsVisible="False" FontSize="12"
+                                Padding="0" MinimumHeightRequest="28" HeightRequest="28"
+                                BackgroundColor="Transparent" TextColor="#00D8F4" Clicked="OnRetryClicked" />
+                    </VerticalStackLayout>
+                </Border>
                 <Button
                     x:Name="DeviceCardButton"
+                    IsEnabled="False"
                     Text=""
                     BackgroundColor="Transparent"
                     BorderWidth="0"
@@ -57,7 +68,7 @@
                     MinimumWidthRequest="0"
                     MinimumHeightRequest="0"
                     ZIndex="10"
-                    SemanticProperties.Description="Soundlet Pulseira, ESP32-S3. Abrir pulseira conectada, conexão simulada"
+                    SemanticProperties.Description="Soundlet Pulseira, ESP32-S3. Conectar por Bluetooth"
                     Clicked="OnPulseiraClicked" />
 
             </AbsoluteLayout>

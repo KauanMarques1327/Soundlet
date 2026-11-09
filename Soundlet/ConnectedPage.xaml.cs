@@ -11,9 +11,8 @@ public partial class ConnectedPage : ContentPage, IQueryAttributable
     private readonly SemaphoreSlim _arrivalGate = new(1, 1);
     private DateTime _selectedDate = DateTime.Today;
     private DateTime _month = new(DateTime.Today.Year, DateTime.Today.Month, 1);
-    private int _nextType;
     private bool _leaving;
-    private bool _ready;
+    private bool _clearing;
     private bool _wifiConnection;
 
     public void ApplyQueryAttributes(IDictionary<string, object> query)
@@ -24,8 +23,11 @@ public partial class ConnectedPage : ContentPage, IQueryAttributable
         ConnectionSymbol.Text = _wifiConnection ? "≋" : "ᛒ";
     }
 
-    public ConnectedPage()
+    private readonly BluetoothService _bluetooth;
+
+    public ConnectedPage(BluetoothService bluetooth)
     {
+        _bluetooth = bluetooth;
         InitializeComponent();
         var names = new[] { "Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb" };
         for (var i = 0; i < names.Length; i++)
@@ -37,14 +39,13 @@ public partial class ConnectedPage : ContentPage, IQueryAttributable
     {
         base.OnAppearing();
         _leaving = false;
+        _bluetooth.StateChanged += OnBleStateChanged;
+        _bluetooth.AlertReceived += OnBleAlertReceived;
+        _bluetooth.Error += OnBleError;
+        UpdateConnectionState();
         try
         {
             await AlertHistory.Current.LoadAsync();
-            if (!_ready)
-            {
-                _nextType = AlertHistory.Current.Records.Count % 6;
-                _ready = true;
-            }
             RefreshHistory();
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
@@ -53,27 +54,38 @@ public partial class ConnectedPage : ContentPage, IQueryAttributable
         }
     }
 
-    private void RefreshHistory()
+    private void RefreshHistory(Guid? excluded = null)
     {
         Cards.Children.Clear();
         foreach (var record in AlertHistory.Current.Records
-                     .Where(a => a.OccurredAt.Date == _selectedDate)
+                     .Where(a => a.OccurredAt.Date == _selectedDate && a.Id != excluded)
                      .OrderByDescending(a => a.OccurredAt))
             Cards.Children.Add(CreateCard(record));
         EmptyState.IsVisible = Cards.Children.Count == 0;
+        EmptyMessage.Text = AlertHistory.Current.Records.Count == 0
+            ? "Nenhum alerta recebido até o momento."
+            : "Nenhum alerta registrado nesta data";
+        UpdateClearButton();
         UpdateDateButton();
+    }
+
+    private void UpdateClearButton()
+    {
+        ClearButton.IsEnabled = !_clearing && AlertHistory.Current.Records.Count > 0;
+        ClearButton.Opacity = ClearButton.IsEnabled ? 1 : 0.45;
     }
 
     private View CreateCard(AlertRecord record)
     {
         var definition = AlertRecord.Definition(record.Type);
         var color = Color.FromArgb(definition.Color);
+        var isClap = record.Type == AlertType.Clap;
         var icon = new Border
         {
             WidthRequest = 46, HeightRequest = 46, Stroke = color,
             StrokeShape = new RoundRectangle { CornerRadius = 11 },
             BackgroundColor = color.WithAlpha(0.08f),
-            Shadow = new Shadow { Brush = color, Opacity = 0.26f, Radius = 10, Offset = new Point(0, 0) },
+            Shadow = new Shadow { Brush = color, Opacity = isClap ? 0.45f : 0.26f, Radius = 10, Offset = new Point(0, 0) },
             Content = new Image { Source = definition.Icon, Margin = 8 }
         };
         var title = new Label { Text = definition.Title, TextColor = Colors.White, FontSize = 14,
@@ -89,11 +101,12 @@ public partial class ConnectedPage : ContentPage, IQueryAttributable
         grid.Add(icon, 0); grid.Add(copy, 1); grid.Add(time, 2);
         var card = new Border
         {
-            Stroke = color.WithAlpha(0.45f), StrokeThickness = 0.8,
+            Stroke = color.WithAlpha(isClap ? 0.9f : 0.45f), StrokeThickness = isClap ? 1 : 0.8,
             StrokeShape = new RoundRectangle { CornerRadius = 15 },
             Background = new LinearGradientBrush(new GradientStopCollection
             {
-                new(color.WithAlpha(0.13f), 0), new(Color.FromArgb("#021624"), 1)
+                new(isClap ? Color.FromArgb("#281239") : color.WithAlpha(0.13f), 0),
+                new(Color.FromArgb(isClap ? "#100F24" : "#021624"), 1)
             }, new Point(0, 0), new Point(1, 1)),
             Padding = new Thickness(10, 9), Content = grid, MinimumHeightRequest = 65
         };
@@ -101,50 +114,88 @@ public partial class ConnectedPage : ContentPage, IQueryAttributable
         return new VerticalStackLayout { Padding = new Thickness(0, 0, 0, 7), Children = { card } };
     }
 
-    private async void OnAddClicked(object? sender, EventArgs e)
+    private async void OnClearClicked(object? sender, EventArgs e)
     {
-        // Capture device-local time at the tap, before storage/animation can delay it.
-        var occurredAt = DateTime.Now;
-        await _arrivalGate.WaitAsync();
+        if (_clearing || AlertHistory.Current.Records.Count == 0) return;
+        _clearing = true;
+        UpdateClearButton();
         try
         {
-            var record = await AlertHistory.Current.AddAsync((AlertType)_nextType, occurredAt);
-            _nextType = (_nextType + 1) % 6;
-            if (_leaving) return;
-            if (_selectedDate != occurredAt.Date)
+            var confirmed = await DisplayAlertAsync("Limpar histórico",
+                "Deseja apagar todas as notificações recebidas?", "Limpar", "Cancelar");
+            if (!confirmed || _leaving) return;
+            await _arrivalGate.WaitAsync();
+            try
             {
-                _selectedDate = occurredAt.Date;
-                RefreshHistory();
-                // Rebuild the filtered list with the new record reserved for its entrance.
-                Cards.Children.RemoveAt(0);
+                await AlertHistory.Current.ClearAsync();
+                if (!_leaving) RefreshHistory();
             }
-            EmptyState.IsVisible = false;
-            await HistoryScroll.ScrollToAsync(0, 0, false);
-            var card = CreateCard(record);
-            var size = card.Measure(Math.Max(200, HistoryScroll.Width), double.PositiveInfinity);
-            var target = Math.Max(72, size.Height);
-            card.Opacity = 0;
-            card.TranslationY = -20;
-            card.Scale = 0.98;
-            var slot = new Grid { HeightRequest = 0, IsClippedToBounds = true, Children = { card } };
-            Cards.Children.Insert(0, slot);
-            var completion = new TaskCompletionSource();
-            new Animation(progress =>
-            {
-                slot.HeightRequest = target * progress;
-                card.Opacity = progress;
-                card.TranslationY = -20 * (1 - progress);
-                card.Scale = 0.98 + 0.02 * progress;
-            }).Commit(slot, "AlertArrival", 16, 340, Easing.CubicOut,
-                (_, _) => completion.TrySetResult());
-            await completion.Task;
-            slot.HeightRequest = -1;
+            finally { _arrivalGate.Release(); }
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
-            await DisplayAlertAsync("Histórico", "Não foi possível salvar este alerta. Tente novamente.", "OK");
+            if (!_leaving)
+                await DisplayAlertAsync("Histórico", "Não foi possível limpar o histórico. Tente novamente.", "OK");
+        }
+        finally
+        {
+            _clearing = false;
+            UpdateClearButton();
+        }
+    }
+
+    private async Task PresentArrivalAsync(AlertRecord record)
+    {
+        var occurredAt = record.OccurredAt;
+        _selectedDate = occurredAt.Date;
+        // Other notifications may have been persisted while the previous card was animating.
+        RefreshHistory(record.Id);
+        EmptyState.IsVisible = false;
+        await HistoryScroll.ScrollToAsync(0, 0, false);
+        var card = CreateCard(record);
+        var size = card.Measure(Math.Max(200, HistoryScroll.Width), double.PositiveInfinity);
+        var target = Math.Max(72, size.Height);
+        card.Opacity = 0;
+        card.TranslationY = -20;
+        card.Scale = 0.98;
+        var slot = new Grid { HeightRequest = 0, IsClippedToBounds = true, Children = { card } };
+        Cards.Children.Insert(0, slot);
+        var completion = new TaskCompletionSource();
+        new Animation(progress =>
+        {
+            slot.HeightRequest = target * progress;
+            card.Opacity = progress;
+            card.TranslationY = -20 * (1 - progress);
+            card.Scale = 0.98 + 0.02 * progress;
+        }).Commit(slot, "AlertArrival", 16, 340, Easing.CubicOut,
+            (_, _) => completion.TrySetResult());
+        await completion.Task;
+        slot.HeightRequest = -1;
+    }
+
+    private async void OnBleAlertReceived(object? sender, AlertRecord record)
+    {
+        await _arrivalGate.WaitAsync();
+        try
+        {
+            // An alert queued before clearing may already have been removed from storage.
+            if (!_leaving && AlertHistory.Current.Records.Any(r => r.Id == record.Id))
+                await PresentArrivalAsync(record);
         }
         finally { _arrivalGate.Release(); }
+    }
+    private async void OnBleError(object? sender, string message)
+    {
+        if (!_leaving) await DisplayAlertAsync("Histórico", message, "OK");
+    }
+    private void OnBleStateChanged(object? sender, EventArgs e) => UpdateConnectionState();
+    private void UpdateConnectionState()
+    {
+        if (_wifiConnection) return;
+        ConnectionHeadingState.Text = _bluetooth.IsConnected ? "conectada" : "desconectada";
+        ConnectionHeadingState.TextColor = Color.FromArgb(_bluetooth.IsConnected ? "#00E0ED" : "#BCC2D3");
+        ConnectionLabel.Text = _bluetooth.IsConnected ? "Conectado via Bluetooth" : "Conexão perdida. Volte para buscar.";
+        ConnectionDot.Color = Color.FromArgb(_bluetooth.IsConnected ? "#00EDAE" : "#8299B7");
     }
 
     private void UpdateDateButton() => DateButton.Text = $"▦  {(_selectedDate == DateTime.Today ? "Hoje" : _selectedDate.ToString("dd/MM/yyyy", Brazilian))}  {(CalendarOverlay.IsVisible ? "⌃" : "﹀")}";
@@ -219,7 +270,7 @@ public partial class ConnectedPage : ContentPage, IQueryAttributable
         // Safe-area padding can be applied natively without reducing Grid.Height.
         // The laid-out footer gives us the actual bottom of usable content.
         var viewport = Math.Min(CalendarOverlay.Height > 0 ? CalendarOverlay.Height : Root.Height,
-            AddButton.Y + AddButton.Height + PageLayout.Padding.Bottom);
+            ClearButton.Y + ClearButton.Height + PageLayout.Padding.Bottom);
         var top = Math.Max(6, Math.Min(desired, viewport - 212));
         var height = Math.Min(374, Math.Max(200, viewport - top - 10));
         CalendarPanel.HeightRequest = height;
@@ -245,6 +296,9 @@ public partial class ConnectedPage : ContentPage, IQueryAttributable
     protected override void OnDisappearing()
     {
         _leaving = true;
+        _bluetooth.StateChanged -= OnBleStateChanged;
+        _bluetooth.AlertReceived -= OnBleAlertReceived;
+        _bluetooth.Error -= OnBleError;
         CloseCalendar();
         base.OnDisappearing();
     }
@@ -258,6 +312,6 @@ public partial class ConnectedPage : ContentPage, IQueryAttributable
 
     private async void OnMoreClicked(object? sender, EventArgs e) =>
         await DisplayAlertAsync("Soundlet · ESP32-S3", _wifiConnection
-            ? "Modo de demonstração. Use + para simular alertas. A conexão Wi-Fi real será implementada em uma próxima etapa."
-            : "Modo de demonstração. Use + para simular alertas. A conexão BLE real será implementada em uma próxima etapa.", "Entendi");
+            ? "A conexão Wi-Fi real será implementada em uma próxima etapa. Os alertas são recebidos pela pulseira via Bluetooth."
+            : "A pulseira envia alertas PALMA por BLE. Para conectar novamente após uma desconexão, volte à busca.", "Entendi");
 }

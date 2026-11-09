@@ -1,3 +1,5 @@
+using Soundlet.Services;
+
 namespace Soundlet;
 
 public partial class BluetoothPage : ContentPage
@@ -21,8 +23,14 @@ public partial class BluetoothPage : ContentPage
     private bool _isNavigatingBack;
     private Window? _animationWindow;
 
-    public BluetoothPage()
+    private readonly BluetoothService _bluetooth;
+    private CancellationTokenSource? _pageLifetime;
+    private bool _startingScan;
+    private bool _isConnecting;
+
+    public BluetoothPage(BluetoothService bluetooth)
     {
+        _bluetooth = bluetooth;
         InitializeComponent();
         CentralLoading.Drawable = _centralArc;
         SearchLoading.Drawable = _searchArc;
@@ -40,12 +48,20 @@ public partial class BluetoothPage : ContentPage
         }
 
         PositionIndicators();
-        StartSearchAnimation();
+        _pageLifetime?.Dispose();
+        _pageLifetime = new CancellationTokenSource();
+        ((System.Collections.Specialized.INotifyCollectionChanged)_bluetooth.Devices).CollectionChanged += OnDevicesChanged;
+        _bluetooth.StateChanged += OnBleStateChanged;
+        _ = BeginScanAsync();
     }
 
     protected override void OnDisappearing()
     {
         _isPageVisible = false;
+        _pageLifetime?.Cancel();
+        ((System.Collections.Specialized.INotifyCollectionChanged)_bluetooth.Devices).CollectionChanged -= OnDevicesChanged;
+        _bluetooth.StateChanged -= OnBleStateChanged;
+        _ = StopScanSafelyAsync();
         StopSearchAnimation();
         if (_animationWindow is { } window)
         {
@@ -81,11 +97,12 @@ public partial class BluetoothPage : ContentPage
         AbsoluteLayout.SetLayoutBounds(SearchLoading, MapArtworkBounds(SearchArcBounds));
         AbsoluteLayout.SetLayoutBounds(BackButton, MapArtworkBounds(BackButtonBounds));
         AbsoluteLayout.SetLayoutBounds(DeviceCardButton, MapArtworkBounds(DeviceCardBounds));
+        AbsoluteLayout.SetLayoutBounds(DeviceCardMask, MapArtworkBounds(new Rect(53, 981, 744, 157)));
     }
 
     private void StartSearchAnimation()
     {
-        if (!_isPageVisible || this.AnimationIsRunning(SearchAnimation))
+        if (!_isPageVisible || !_bluetooth.IsScanning || this.AnimationIsRunning(SearchAnimation))
             return;
 
         new Animation(angle =>
@@ -105,9 +122,69 @@ public partial class BluetoothPage : ContentPage
 
     private void StopSearchAnimation() => this.AbortAnimation(SearchAnimation);
 
-    private void OnWindowStopped(object? sender, EventArgs e) => StopSearchAnimation();
+    private async void OnWindowStopped(object? sender, EventArgs e)
+    {
+        StopSearchAnimation();
+        _pageLifetime?.Cancel();
+        await StopScanSafelyAsync();
+    }
 
-    private void OnWindowResumed(object? sender, EventArgs e) => StartSearchAnimation();
+    private async void OnWindowResumed(object? sender, EventArgs e)
+    {
+        _pageLifetime?.Dispose();
+        _pageLifetime = new CancellationTokenSource();
+        await BeginScanAsync();
+    }
+
+    private async Task StopScanSafelyAsync()
+    {
+        try { await _bluetooth.StopScanAsync(); }
+        catch (Exception ex) { System.Diagnostics.Debug.WriteLine(ex); }
+    }
+
+    private void OnDevicesChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e) => UpdateBleState();
+    private void OnBleStateChanged(object? sender, EventArgs e) => UpdateBleState();
+    private void UpdateBleState()
+    {
+        if (_isConnecting)
+        {
+            DeviceCardMask.IsVisible = true;
+            DeviceCardButton.IsEnabled = false;
+            SearchStatus.Text = "Conectando à pulseira...";
+            RetryButton.IsVisible = false;
+            StopSearchAnimation();
+            return;
+        }
+        var available = _bluetooth.Devices.Count > 0 || _bluetooth.IsConnected;
+        DeviceCardMask.IsVisible = !available;
+        DeviceCardButton.IsEnabled = available && !_isNavigatingBack;
+        SearchStatus.Text = _bluetooth.IsScanning ? "Procurando pulseira..." : "Nenhuma pulseira encontrada.";
+        RetryButton.IsVisible = !_bluetooth.IsScanning;
+        if (_bluetooth.IsScanning) StartSearchAnimation(); else StopSearchAnimation();
+    }
+
+    private async Task BeginScanAsync()
+    {
+        if (!_isPageVisible || _isNavigatingBack || _bluetooth.IsScanning || _startingScan) return;
+        _startingScan = true;
+        try
+        {
+            UpdateBleState();
+            await _bluetooth.ScanAsync(_pageLifetime!.Token);
+            if (_isPageVisible) UpdateBleState();
+        }
+        catch (OperationCanceledException) { }
+        catch (Exception ex)
+        {
+            if (!_isPageVisible) return;
+            UpdateBleState();
+            SearchStatus.Text = "Busca indisponível.";
+            RetryButton.IsVisible = true;
+            await DisplayAlertAsync("Bluetooth", ex.Message, "OK");
+        }
+        finally { _startingScan = false; }
+    }
+    private async void OnRetryClicked(object? sender, EventArgs e) => await BeginScanAsync();
 
     private async void OnBackClicked(
         object? sender, EventArgs e)
@@ -131,7 +208,29 @@ public partial class BluetoothPage : ContentPage
     {
         if (_isNavigatingBack) return;
         _isNavigatingBack = true;
-        try { await Shell.Current.GoToAsync(nameof(ConnectedPage)); }
-        finally { _isNavigatingBack = false; }
+        _isConnecting = true;
+        DeviceCardButton.IsEnabled = false;
+        try
+        {
+            if (!_bluetooth.IsConnected)
+            {
+                var device = _bluetooth.Devices.FirstOrDefault();
+                if (device is null) return;
+                DeviceCardMask.IsVisible = true;
+                SearchStatus.Text = "Conectando à pulseira...";
+                RetryButton.IsVisible = false;
+                await _bluetooth.ConnectAsync(device, _pageLifetime!.Token);
+            }
+            if (_isPageVisible && _bluetooth.IsConnected)
+                await Shell.Current.GoToAsync(nameof(ConnectedPage));
+        }
+        catch (Exception ex)
+        {
+            if (_isPageVisible)
+                await DisplayAlertAsync("Bluetooth", ex is OperationCanceledException
+                    ? "A conexão não foi concluída. Aproxime a pulseira e tente novamente."
+                    : "Não foi possível conectar. " + ex.Message, "OK");
+        }
+        finally { _isConnecting = false; _isNavigatingBack = false; if (_isPageVisible) UpdateBleState(); }
     }
 }

@@ -3,7 +3,7 @@ using Soundlet.Models;
 
 namespace Soundlet.Services;
 
-// Shared ingestion path for the simulator and future BLE notifications.
+// Local history used by BLE notifications.
 public sealed class AlertHistory
 {
     public static AlertHistory Current { get; } = new();
@@ -29,13 +29,27 @@ public sealed class AlertHistory
         finally { _gate.Release(); }
     }
 
-    public async Task<AlertRecord> AddAsync(AlertType type, DateTime occurredAt)
+    public async Task ClearAsync()
     {
         await LoadAsync();
         await _gate.WaitAsync();
         try
         {
-            var record = new AlertRecord(Guid.NewGuid(), type, occurredAt);
+            // Replace storage first so a failed write preserves the in-memory history.
+            await File.WriteAllTextAsync(FileName + ".tmp", "[]");
+            File.Move(FileName + ".tmp", FileName, true);
+            _records.Clear();
+        }
+        finally { _gate.Release(); }
+    }
+
+    public async Task<AlertRecord> AddAsync(AlertType type, DateTime occurredAt, AlertSource source = AlertSource.Manual)
+    {
+        await LoadAsync();
+        await _gate.WaitAsync();
+        try
+        {
+            var record = new AlertRecord(Guid.NewGuid(), type, occurredAt) { Source = source };
             _records.Add(record);
             try
             {
